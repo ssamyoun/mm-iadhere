@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder.WatchKit.Storyboard" version="3.0" toolsVersion="14460.31" targetRuntime="watchKit" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="AgC-eL-Hgc">
+    <device id="watch44" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="watchOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14460.20"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBWatchKitPlugin" version="14460.16"/>
+    </dependencies>
+    <customFonts key="customFonts">
+        <array key="Symbol.ttf">
+            <string>Symbol</string>
+        </array>
+    </customFonts>
+    <scenes>
+        <!--Interface Controller-->
+        <scene sceneID="aou-V4-d1y">
+            <objects>
+                <controller id="AgC-eL-Hgc" customClass="InterfaceController" customModule="Medication_Reminder_WatchKit_App" customModuleProvider="target">
+                    <items>
+                        <table alignment="left" id="CNw-im-wye">
+                            <items>
+                                <tableRow identifier="PrescriptionList" id="6yw-Mc-PAo" customClass="PrescriptionList" customModule="Medication_Reminder_WatchKit_Extension">
+                                    <group key="rootItem" width="1" height="0.0" alignment="left" layout="vertical" id="9zW-Ui-ePx">
+                                        <items>
+                                            <label width="1" height="23" alignment="center" verticalAlignment="center" text="Prescribed1" textAlignment="left" id="ypW-76-xB9">
+                                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <fontDescription key="font" type="system" pointSize="13"/>
+                                            </label>
+                                        </items>
+                                    </group>
+                                    <connections>
+                                        <outlet property="prescriptionLbl" destination="ypW-76-xB9" id="wML-jR-KbG"/>
+                                    </connections>
+                                </tableRow>
+                            </items>
+                        </table>
+                        <button width="1" height="24" alignment="left" title="Demo" id="XtN-5V-mxD">
+                            <color key="backgroundColor" red="0.25098040700000002" green="0.0" blue="0.50196081400000003" alpha="1" colorSpace="calibratedRGB"/>
+                            <connections>
+                                <action selector="startBtnAction" destination="AgC-eL-Hgc" id="h9L-cG-bNI"/>
+                            </connections>
+                        </button>
+                        <label width="136" height="19" alignment="center" text="Pill1" textAlignment="center" minimumScaleFactor="0.59999999999999998" id="86g-lH-ns8"/>
+                        <imageView width="136" height="113" alignment="center" image="Pill_Phone" contentMode="scaleAspectFit" id="Zrf-2d-Ztf"/>
+                    </items>
+                    <connections>
+                        <outlet property="activityImage" destination="Zrf-2d-Ztf" id="Sd7-tY-7Qe"/>
+                        <outlet property="activityTitle" destination="86g-lH-ns8" id="NEY-Cq-yNs"/>
+                        <outlet property="prescriptionTable" destination="CNw-im-wye" id="Rlk-fv-5rg"/>
+                        <outlet property="startBtn" destination="XtN-5V-mxD" id="uuP-V1-Fon"/>
+                    </connections>
+                </controller>
+            </objects>
+            <point key="canvasLocation" x="218.78260869565216" y="339.24107142857144"/>
+        </scene>
+        <!--PrescriptionController-->
+        <scene sceneID="ACU-1H-5Xq">
+            <objects>
+                <controller identifier="PrescriptionController" id="nCn-wU-v5F" customClass="PrescriptionInterfaceController" customModule="Medication_Reminder_WatchKit_Extension"/>
+            </objects>
+            <point key="canvasLocation" x="696.26086956521738" y="322.54464285714289"/>
+        </scene>
+        <!--HRController-->
+        <scene sceneID="8bB-Ht-Uk8">
+            <objects>
+                <controller identifier="HRController" id="gID-17-cXC" customClass="HeartRateController" customModule="Medication_Reminder_WatchKit_Extension">
+                    <items>
+                        <label height="20" alignment="center" text="" minimumScaleFactor="0.5" id="Iio-p5-mtX"/>
+                        <group width="1" alignment="left" id="H1g-Hj-yTZ">
+                            <items>
+                                <label width="30" height="35" alignment="center" text="--" minimumScaleFactor="0.20000000000000001" id="hxi-vl-AIJ">
+                                    <fontDescription key="font" name="Symbol" family="Symbol" pointSize="23"/>
+                                </label>
+                                <label width="66" height="38" alignment="right" text="BPM" textAlignment="left" id="4j5-r9-kub">
+                                    <color key="textColor" red="0.8613288402557373" green="0.058584794402122498" blue="0.11313973367214203" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    <fontDescription key="font" style="UICTFontTextStyleFootnote"/>
+                                </label>
+                            </items>
+                        </group>
+                        <imageView width="63" height="61" alignment="center" id="Kno-zh-V7M"/>
+                        <button width="1" alignment="left" title="Start" id="JvV-5H-a2z">
+                            <color key="backgroundColor" red="0.25098040700000002" green="0.0" blue="0.50196081400000003" alpha="1" colorSpace="calibratedRGB"/>
+                            <connections>
+                                <action selector="heartRateBtnAction" destination="gID-17-cXC" id="HfQ-Eg-eNP"/>
+                            </connections>
+                        </button>
+                    </items>
+                    <connections>
+                        <outlet property="heartImage" destination="Kno-zh-V7M" id="k70-j9-hEu"/>
+                        <outlet property="heartRateBtn" destination="JvV-5H-a2z" id="uS3-g4-mhX"/>
+                        <outlet property="heartRateLabel" destination="hxi-vl-AIJ" id="8do-Hm-1Sy"/>
+                    </connections>
+                </controller>
+            </objects>
+            <point key="canvasLocation" x="484.86956521739125" y="322.54464285714289"/>
+        </scene>
+        <!--ActivityDetailsController-->
+        <scene sceneID="8cB-Hr-Uy8">
+            <objects>
+                <controller identifier="ActivityDetailsController" id="gHD-16-cYC" customClass="ActivityDetailsController" customModule="Medication_Reminder_WatchKit_Extension"/>
+            </objects>
+            <point key="canvasLocation" x="484.86956521739125" y="322.54464285714289"/>
+        </scene>
+        <!--Static Notification Interface Controller-->
+        <scene sceneID="AEw-b0-oYE">
+            <objects>
+                <notificationController id="YCC-NB-fut">
+                    <items>
+                        <label alignment="left" text="Medications" id="WEx-on-7wC">
+                            <fontDescription key="font" style="UICTFontTextStyleHeadline"/>
+                        </label>
+                        <label alignment="left" text="Alert Label" id="IdU-wH-bcW"/>
+                        <imageView width="136" alignment="left" image="Pill_Phone" id="xO1-N4-vFB"/>
+                    </items>
+                    <notificationCategory key="notificationCategory" identifier="medicine.category" id="JfB-70-Muf">
+                        <color key="titleColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                        <color key="sashColor" red="1" green="1" blue="0.40000000600000002" alpha="1" colorSpace="calibratedRGB"/>
+                    </notificationCategory>
+                    <connections>
+                        <outlet property="notificationAlertLabel" destination="IdU-wH-bcW" id="JKC-fr-R95"/>
+                        <segue destination="4sK-HA-Art" kind="relationship" relationship="dynamicNotificationInterface" id="kXh-Jw-8B1"/>
+                    </connections>
+                </notificationController>
+            </objects>
+            <point key="canvasLocation" x="220" y="642.5"/>
+        </scene>
+        <!--Notification Controller-->
+        <scene sceneID="ZPc-GJ-vnh">
+            <objects>
+                <controller id="4sK-HA-Art" customClass="NotificationController" customModule="Medication_Reminder_WatchKit_App" customModuleProvider="target">
+                    <items>
+                        <label alignment="left" text="&lt;Title&gt;" id="7r6-qc-ehw">
+                            <color key="textColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                            <fontDescription key="font" style="UICTFontTextStyleHeadline"/>
+                        </label>
+                        <label alignment="left" text="&lt;subtitle&gt;" id="2YP-2g-7KF">
+                            <color key="textColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                            <fontDescription key="font" style="UICTFontTextStyleSubhead"/>
+                        </label>
+                        <label alignment="left" text="&lt;body&gt;" id="XNQ-3o-zhK">
+                            <color key="textColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                        </label>
+                    </items>
+                    <color key="backgroundColor" red="1" green="1" blue="0.40000000600000002" alpha="1" colorSpace="calibratedRGB"/>
+                    <connections>
+                        <outlet property="bodyLabel" destination="XNQ-3o-zhK" id="WYI-NI-otb"/>
+                        <outlet property="subtitleLabel" destination="2YP-2g-7KF" id="I9H-G5-V2p"/>
+                        <outlet property="titleLabel" destination="7r6-qc-ehw" id="5Go-zP-men"/>
+                    </connections>
+                </controller>
+            </objects>
+            <point key="canvasLocation" x="468" y="621.5"/>
+        </scene>
+    </scenes>
+</document>

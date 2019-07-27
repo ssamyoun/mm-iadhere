@@ -1,0 +1,84 @@
+{
+    "config_code": 1,
+    "time_type": 0,
+    "events": [
+        {
+            "time": "08:00:00",
+            "type": 1,
+            "ReminderId": 15,
+            "TimeGroup": 1,
+            "display_text": "Apixaban",
+            "med_name": "Apixaban",
+            "query": "It's the time to take one pill Apixaban for stroke safety",
+            "requery": "Did you take one Apixaban pill which you were supposed to take at 9 AM?",
+            "requery_interval": "00:03",
+            "details": "Take one pill of Apixaban after breakfast",
+            "treatmentId": 13
+        },
+        {
+            "time": "09:00:00",
+            "type": 2,
+            "ReminderId": 18,
+            "TimeGroup": 2,
+            "display_text": "Bi-manual Task",
+            "med_name": "Bi-manual Task",
+            "query": "Please do the arm movement exercise for 5 minutes",
+            "requery": "Did you do the arm movement exercise which you were supposed to do at 9 AM?",
+            "requery_interval": "00:03",
+            "details": "Use your left arm to assist the right arm through some functional tasks",
+            "treatmentId": 14
+        },
+        {
+            "time": "13:00:00",
+            "type": 1,
+            "ReminderId": 20,
+            "TimeGroup": 3,
+            "display_text": "Lisinoprill",
+            "med_name": "Lisinoprill",
+            "query": "It's the time to take one pill Lisinoprill for blood pressure control",
+            "requery": "Did you take one Lisinoprill pill which you were supposed to take at 1 PM?",
+            "requery_interval": "00:03",
+            "details": "Take one pill of Lisinoprill after lunch.",
+            "treatmentId": 16
+        },
+        {
+            "time": "13:30:00",
+            "type": 4,
+            "ReminderId": 30,
+            "TimeGroup": 3,
+            "display_text": "ECG Check",
+            "med_name": "ECG",
+            "query": "It's the time to do an ECG. Do you want to try it now?",
+            "requery": "Did you do the ECG?",
+            "requery_interval": "00:03//1.30pm",
+            "details": "Press the crown twice to go to Apps, tap on the ECG app, and follow the instructions.",
+            "treatmentId": 17
+        },
+        {
+            "time": "17:00:00",
+            "type": 2,
+            "ReminderId": 25,
+            "TimeGroup": 5,
+            "display_text": "Bi-manual Task",
+            "med_name": "Bi-manual Task",
+            "query": "Please do the arm movement exercise for 5 minutes",
+            "requery": "Did you do the arm movement exercise which you were supposed to do at 5 PM?",
+            "requery_interval": "00:03",
+            "details": "Use your left arm to assist the right arm through some functional tasks",
+            "treatmentId": 14
+        },
+        {
+            "time": "18:30:00",
+            "type": 4,
+            "ReminderId": 31,
+            "TimeGroup": 5,
+            "display_text": "ECG Check",
+            "med_name": "ECG",
+            "query": "It's the time to do an ECG. Do you want to try it now?",
+            "requery": "Did you do the ECG?",
+            "requery_interval": "00:03//6pm",
+            "details": "Press the crown twice to go to Apps, tap on the ECG app, and follow the instructions.",
+            "treatmentId": 17
+        }
+    ]
+}

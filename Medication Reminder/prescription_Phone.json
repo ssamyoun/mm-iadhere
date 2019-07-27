@@ -1,0 +1,115 @@
+{
+    "config_code" : "1",
+    "time_type":0,
+    "events" : [
+                {
+                "time":"10:05:10",
+                "type": 1,
+                "query_code":"med1",
+                "display_text":"Medicine",
+                "med_name":"Apixaban",
+                "query":"Please take the pill Apixaban for stroke safety",
+                "requery":"Did you take one Apixaban pill which you were supposed to take at 10:00 AM?",
+                "query_type": "reminder",
+                "requery_interval": "00:03",
+                "details": "Take one pill of Apixaban medicine after breakfast",
+                "image": "Apixaban.jpg"
+                },
+                {
+                "time":"10:10:05",
+                "type": 1,
+                "query_code":"med2",
+                "display_text":"Medicine",
+                "med_name":"Aspirin",
+                "query":"Please take one pill of Aspirin for painkiller",
+                "requery":"Did you take one Aspirin pill which you were supposed to take at 10:10 AM?",
+                "query_type": "reminder",
+                "requery_interval": "00:03",
+                "details": "Don't take the pill before breakfast",
+                "image": "Aspirin.jpg"
+                },
+                {
+                "time":"10:15:00",
+                "type": 2,
+                "query_code":"ex1",
+                "display_text":"Exercise",
+                "med_name":"Bi-manual tasks",
+                "query":"Please do the arm movement exercise for 5 minutes",
+                "requery":"Did you do the arm movement exercise which you were supposed to do at 10.15 AM?",
+                "query_type": "reminder",
+                "requery_interval": "00:5",
+                "requery_requirement":"optional",
+                "details": "Use your left arm to assist the right arm through some functional tasks",
+                "image": "Bi-manual tasks.jpg"
+                },
+                {
+                "time":"09:55:15",
+                "type": 1,
+                "query_code":"med3",
+                "med_name":"Atorvastatin",
+                "display_text":"Medicine",
+                "query":"Please take one pill of Atorvastatin for cholesterol improvement",
+                "requery":"Did you take one Atorvastatin pill which you were supposed to take at 12.30 PM?",
+                "query_type": "repeat_reminder",
+                "requery_interval": "00:03",
+                "details": "Take one Atorvastatin pill after lunch",
+                "image": "Atorvastatin.jpg"
+                },
+                {
+                "time":"01:30:20",
+                "type": 1,
+                "query_code":"med4",
+                "med_name":"Lisinoprill",
+                "display_text":"Medicine",
+                "query":"It's the time to take the pill Lisinoprill for blood pressure",
+                "requery":"Did you take one Lisinoprill pill which you were supposed to take at 5:30 PM?",
+                "query_type": "repeat_reminder",
+                "requery_interval": "00:03",
+                "details": "Take one pill after lunch",
+                "image": "Lisinoprill.jpg"
+                },
+                {
+                "time":"17:45:10",
+                "type": 2,
+                "query_code":"ex2",
+                "display_text":"Exercise",
+                "med_name":"Constraint-Induced Movement therapy",
+                "query":"Let's do some arm movement for 5 minutes",
+                "requery":"Did you do the arm movement exercise which you were supposed to do at 5.45 PM?",
+                "query_type": "reminder",
+                "requery_interval": "00:05",
+                "details": "Focus on using your left arm throughout functional tasks such as picking up a cup, using a cell phone.",
+                "image": "Constraint-Induced Movement therapy.jpg"
+                },
+                {
+                "time":"18:00:00",
+                "type": 1,
+                "query_code":"med5",
+                "display_text":"Medicine",
+                "med_name":"Apixaban",
+                "query":"It's the time to take medicine Apixaban for stroke safety",
+                "requery":"Did you take one Apixaban pill which you were supposed to take at 6 PM?",
+                "query_type": "reminder",
+                "requery_interval": "00:03",
+                "details": "Take one pill of Apixaban medicine after dinner",
+                "image": "Apixaban.jpg"
+                },
+                {
+                "time":"18:30:00",
+                "type": 1,
+                "query_code":"med6",
+                "display_text":"Medicine",
+                "med_name":"Apixaban",
+                "query":"It's the time to take medicine Apixaban for stroke safety",
+                "requery":"Did you take one Apixaban pill which you were supposed to take at 6:30 PM?",
+                "query_type": "reminder",
+                "requery_interval": "00:03",
+                "details": "Take one pill of Apixaban medicine after dinner",
+                "image": "Apixaban.jpg"
+                }
+                
+                ]
+}
+
+
+
