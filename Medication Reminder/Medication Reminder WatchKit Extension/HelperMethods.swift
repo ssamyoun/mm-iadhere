@@ -16,6 +16,16 @@ class HelperMethods {
         return uuidString as String
     }
     
+    static func getReminderIndex(serialIdentifier:String) -> Int{
+        switch serialIdentifier
+        {
+        case "org": return 0
+        case "uno": return 1
+        case "duo": return 2
+        default: return -1 //test
+        }
+    }
+    
     static func wordToNumber(word:String) -> Int{
         switch word
         {

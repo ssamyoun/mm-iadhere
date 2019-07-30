@@ -302,9 +302,11 @@ class ViewController: UIViewController, UNUserNotificationCenterDelegate, SFSpee
             print("audioSession properties weren't set because of an error.")
         }
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()  //3
-        guard let inputNode = audioEngine.inputNode else {
-            fatalError("Audio engine has no input node")
-        }  //4
+        let inputNode = audioEngine.inputNode
+        //let recognitionRequest = recognitionRequest
+//        guard let inputNode = audioEngine.inputNode else {
+//            fatalError("Audio engine has no input node")
+//        }  //4
         guard let recognitionRequest = recognitionRequest else {
             fatalError("Unable to create an SFSpeechAudioBufferRecognitionRequest object")
         } //5
@@ -409,7 +411,7 @@ class ViewController: UIViewController, UNUserNotificationCenterDelegate, SFSpee
 
     func activateSessionInPhone(){
         if WCSession.isSupported() {
-            session = WCSession.default()
+            session = WCSession.default
             session?.delegate = self
             session?.activate()
         }

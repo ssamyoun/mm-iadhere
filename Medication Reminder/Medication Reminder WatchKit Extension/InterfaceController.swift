@@ -38,7 +38,7 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
         WKInterfaceDevice.current().isBatteryMonitoringEnabled = true
         if(!UserDefaults.standard.bool(forKey: "firstlaunch1.0")){
             print("NOTIFICATIONS LOADED")
-            loadAllNotifications()
+            loadAllRegularNotifications()
             UserDefaults.standard.set(true, forKey: "firstlaunch1.0")
             UserDefaults.standard.synchronize();
         }
@@ -89,7 +89,9 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
     var currentResponseText = ""
     var currentAskedDetails: Int = 0 // intermediate state
     var currentAskedtoRepeat: Int = 0 // intermediate state
-    
+    var currentBatteryLevel:Int {
+        return Int(roundf(WKInterfaceDevice.current().batteryLevel * 100))
+    }
     var dontExit: Bool = false
     var conversationFinished = false
 
@@ -193,7 +195,7 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
                     let reqStrArr = requeryTime.components(separatedBy: ":")
                     let mn: Int = Int(reqStrArr[1])!
                     utterSentence(line: "Ok. Remind you after \(mn) minutes");
-                    setCurrentReminderAfterNminutes(mn: mn)
+                    onUserReschuledReminder(mn: mn)//setCurrentReminderAfterNminutes(mn: mn)
                 }
                 else if (responseStr.contains("minute")){
                     currentResponseResult = ResponseType.respondedWithPostpone.rawValue
@@ -209,11 +211,11 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
                         if(CharacterSet.decimalDigits.isSuperset(of: CharacterSet(charactersIn: wordsArr[indexOfMin]))){
                             let mn: Int = Int(wordsArr[indexOfMin])!
                             utterSentence(line: "Ok. Remind you after \(mn) minutes");
-                            setCurrentReminderAfterNminutes(mn: mn)
+                            onUserReschuledReminder(mn: mn)
                         } else{
                             let mn: Int = HelperMethods.wordToNumber(word: wordsArr[indexOfMin])//2  //extensiveLater
                             utterSentence(line: "Ok. Remind you after \(mn) minutes");
-                            setCurrentReminderAfterNminutes(mn: mn)
+                            onUserReschuledReminder(mn: mn)
                         }
                     }
                 } else if (responseStr.contains("thank")){ //"thanks for reminding" type response
@@ -252,29 +254,105 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
             })
         }
     }
+  
+    //------------notification functions-----------
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.sound,.alert])
+    }
     
-//    func setCurrentReminderAfterNminutes(mn:Int){
-//        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(mn * 60), repeats: false)
-//        let reminder: NSMutableDictionary = currentReminder!.mutableCopy() as! NSMutableDictionary
-//        reminder["query"] = currentReminder?["requery"]
-//        addRemindderNotification(trigger: trigger, reminder: reminder, repeatedReminder: false)
-//    }
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {//clicked
+        let content = response.notification.request.content
+        let dc = content.userInfo as NSDictionary
+        currentReminder = dc.mutableCopy() as! NSMutableDictionary
+        do {
+            UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+        } catch {
+        }
+        completionHandler()
+        loadAlarm()
+    }
     
-    func setRepeatingReminderAsPerSerialIdentifer(reminder: NSMutableDictionary, mn: Int) -> String{
+    func setMissedReminderAsPerSerialIdentifer(reminder: NSMutableDictionary, mn: Int){
         let serialIdentifier = reminder["serialIdentifier"] as! String
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(mn * 60), repeats: false)
         if(serialIdentifier == "org")
         {
-            addReminderNotification(trigger: trigger, reminder: reminder, serialIdentifier: "uno")
+            reminder["query"] = currentReminder?["requery"]
+            addaReminderNotification(trigger: trigger, reminder: reminder, serialIdentifier: "uno")
         }
         else if(serialIdentifier == "uno")
         {
-            addReminderNotification(trigger: trigger, reminder: reminder, serialIdentifier: "duo")
+            reminder["query"] = currentReminder?["requery"]
+            addaReminderNotification(trigger: trigger, reminder: reminder, serialIdentifier: "duo")
         }
     }
     
-    var watchBatteryPercentage:Int {
-        return Int(roundf(WKInterfaceDevice.current().batteryLevel * 100))
+    func onUserReschuledReminder(mn: Int){
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(mn * 60), repeats: false)
+        let reminder: NSMutableDictionary = currentReminder!.mutableCopy() as! NSMutableDictionary
+        reminder["query"] = currentReminder?["requery"]
+        addaReminderNotification(trigger: trigger, reminder: reminder, serialIdentifier: reminder["serialIdentifier"] as! String)
+    }
+    
+    func loadAllRegularNotifications(){
+        for item in remindersDictionary.values {
+            let dateStr: String = (item["time"] as? String)!
+            let dateStrArr = dateStr.components(separatedBy: ":")
+            var date = DateComponents()
+            date.hour = Int(dateStrArr[0])!
+            date.minute = Int(dateStrArr[1])!
+            let trigger = UNCalendarNotificationTrigger(dateMatching: date, repeats: true)
+            addaReminderNotification(trigger: trigger, reminder: item, serialIdentifier: "org")
+        }
+    }
+    
+    func addaReminderNotification(trigger: UNNotificationTrigger, reminder: NSMutableDictionary, serialIdentifier: String){
+        reminder["serialIdentifier"] = serialIdentifier
+        let content = getNotificationContent(reminder: reminder)
+        let uuId = HelperMethods.stringWithUUID()
+        let request = UNNotificationRequest(identifier: uuId, content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request) { (notificationError) in
+            if(notificationError == nil){
+            }
+        }
+    }
+    
+    func getNotificationContent(reminder:NSMutableDictionary) -> UNMutableNotificationContent{
+        let content = UNMutableNotificationContent()
+        content.title = "Reminder"
+        let reminderType = (reminder["type"] as? Int)!
+        if(reminderType == 1){
+            content.subtitle = "Pill Time"
+        }else if(reminderType == 2){
+            content.subtitle = "Exercise Time"
+        }else if(reminderType == 3){
+            content.subtitle = "Heartbit Check Time"
+        }else if(reminderType == 4){
+            content.subtitle = "ECG Check Time"
+        }else if(reminderType == 5){
+            content.subtitle = "Activities"
+        }
+        content.body = HelperMethods.convertToPmAmFormat(str: (reminder["time"] as? String)!)
+        content.sound = UNNotificationSound.default()//content.attachments = pillImageInNotification()
+        content.categoryIdentifier = "medicine.category"
+        content.userInfo = reminder as? NSDictionary as? [AnyHashable: Any] ?? [:]
+        return content
+    }
+    
+    func activateNotificationsOnWatch(){
+        UNUserNotificationCenter.current().delegate = self
+        UNUserNotificationCenter.current().requestAuthorization(options: [.sound,.alert]) { (granted, error) in
+            if granted == false {
+                print("Launch Notification Error: \(error?.localizedDescription)")
+            }
+        }
+        let notificationCategory = UNNotificationCategory(identifier: "medicine.category", actions: [], intentIdentifiers: [], options: [])
+        UNUserNotificationCenter.current().setNotificationCategories([notificationCategory])
+    }
+    
+    func setNotifAfterSeconds(sec: Int){
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(sec), repeats: false)
+        addaReminderNotification(trigger: trigger, reminder: currentReminder!, serialIdentifier: "test")
     }
     
     public func loadAlarm() {
@@ -314,111 +392,19 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
             }
         })
     }
-    
-    //------------notification functions-----------
-    var nfIdIssuedAfterNext10Mins = [String]()
-    
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.sound,.alert])
-    }
-    
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        //clicked
-        let content = response.notification.request.content
-        let dc = content.userInfo as NSDictionary
-        currentReminder = dc.mutableCopy() as! NSMutableDictionary
-        //currentReminder!["reminded"] = 2
-        //let rId: Int = (currentReminder!["ReminderId"] as? Int)!
-//        if(isRemindersNotFull(rId: rId)){
-//            incrementRemindersIdx(rId: rId)
-//        }
-        //setIndexOfReminder(rId: rId, rSerial: 2)
-        //notificationClicked = true
-        do {
-            UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-        } catch {
-        }
-        completionHandler()
-        loadAlarm()
-    }
-    
-    func activateNotificationsOnWatch(){
-        UNUserNotificationCenter.current().delegate = self
-        UNUserNotificationCenter.current().requestAuthorization(options: [.sound,.alert]) { (granted, error) in
-            if granted == false {
-                print("Launch Notification Error: \(error?.localizedDescription)")
-            }
-        }
-        let notificationCategory = UNNotificationCategory(identifier: "medicine.category", actions: [], intentIdentifiers: [], options: [])
-        UNUserNotificationCenter.current().setNotificationCategories([notificationCategory])
-    }
-    
-    func loadAllNotifications(){
-        for item in remindersDictionary.values {
-            let dateStr: String = (item["time"] as? String)!
-            let dateStrArr = dateStr.components(separatedBy: ":")
-            var date = DateComponents()
-            date.hour = Int(dateStrArr[0])!
-            date.minute = Int(dateStrArr[1])!
-            let trigger = UNCalendarNotificationTrigger(dateMatching: date, repeats: true)
-            addReminderNotification(trigger: trigger, reminder: item, serialIdentifier: "org")
-        }
-    }
-    
-    func setNotifAfterSeconds(sec: Int){
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(sec), repeats: false)
-        addReminderNotification(trigger: trigger, reminder: currentReminder!, serialIdentifier: "test")
-    }
-    
-    func getNotificationContent(reminder:NSMutableDictionary) -> UNMutableNotificationContent{
-        let content = UNMutableNotificationContent()
-        content.title = "Reminder"
-        let reminderType = (reminder["type"] as? Int)!
-        if(reminderType == 1){
-            content.subtitle = "Pill Time"
-        }else if(reminderType == 2){
-            content.subtitle = "Exercise Time"
-        }else if(reminderType == 3){
-            content.subtitle = "Heartbit Check Time"
-        }else if(reminderType == 4){
-            content.subtitle = "ECG Check Time"
-        }else if(reminderType == 5){
-            content.subtitle = "Activities"
-        }
-        content.body = HelperMethods.convertToPmAmFormat(str: (reminder["time"] as? String)!)
-        content.sound = UNNotificationSound.default()
-        //content.attachments = pillImageInNotification()
-        content.categoryIdentifier = "medicine.category"
-        content.userInfo = reminder as? NSDictionary as? [AnyHashable: Any] ?? [:]
-        return content
-    }
-    
-//    func addNotification(trigger: UNNotificationTrigger, reminder: NSMutableDictionary, repeatedReminder: Bool){
-//        let content = getNotificationContent(reminder: reminder)
-//        let uuId = HelperMethods.stringWithUUID()
-//        let request = UNNotificationRequest(identifier: uuId, content: content, trigger: trigger)
-//        UNUserNotificationCenter.current().add(request) { (notificationError) in
-//            if(notificationError == nil){
-//                if(repeatedReminder){
-//                    self.nfIdIssuedAfterNext10Mins.append(uuId)
-//                }
-//            }
-//        }
-//    }
-    
-    func addReminderNotification(trigger: UNNotificationTrigger, reminder: NSMutableDictionary, serialIdentifier: String){
-        reminder["serialIdentifier"] = serialIdentifier
-        let content = getNotificationContent(reminder: reminder)
-        let uuId = HelperMethods.stringWithUUID()
-        let request = UNNotificationRequest(identifier: uuId, content: content, trigger: trigger)
-        UNUserNotificationCenter.current().add(request) { (notificationError) in
-            if(notificationError == nil){
-//                if(repeatedReminder){
-//                    self.nfIdIssuedAfterNext10Mins.append(uuId)
-//                }
-            }
-        }
-    }
+    //var nfIdIssuedAfterNext10Mins = [String]()
+    //    func addNotification(trigger: UNNotificationTrigger, reminder: NSMutableDictionary, repeatedReminder: Bool){
+    //        let content = getNotificationContent(reminder: reminder)
+    //        let uuId = HelperMethods.stringWithUUID()
+    //        let request = UNNotificationRequest(identifier: uuId, content: content, trigger: trigger)
+    //        UNUserNotificationCenter.current().add(request) { (notificationError) in
+    //            if(notificationError == nil){
+    //                if(repeatedReminder){
+    //                    self.nfIdIssuedAfterNext10Mins.append(uuId)
+    //                }
+    //            }
+    //        }
+    //    }
     
 //    func pillImageInNotification()->[UNNotificationAttachment]{
 //        let path = Bundle.main.path(forResource: "Pill_Watch", ofType: "png")
@@ -480,7 +466,7 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
     }
     
     func activateSessionInWatch(){
-        session = WCSession.default()
+        session = WCSession.default
         session?.delegate = self
         session?.activate()
     }
@@ -528,7 +514,7 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
     }
     
     public func sendSubjectResponseToServer(ReminderId: Int, ReminderIndex: Int, ResponseResult: Int, Interaction: String){
-        let response = Response(ReminderId: ReminderId, DateasString: HelperMethods.currentDateNoAmPmAsString(), RemindedTime: (currentReminder!["time"] as? String)!, ResponseTime: HelperMethods.currentTime24AsString(), TimeGroup: (currentReminder!["TimeGroup"] as? Int)!, AskedForDetails: currentAskedDetails, AskedToRepeat: currentAskedtoRepeat, ReminderIndex: ReminderIndex, ResponseResult: ResponseResult, PatientId: PatientId, Interaction: Interaction, BatteryLevel: watchBatteryPercentage)
+        let response = Response(ReminderId: ReminderId, DateasString: HelperMethods.currentDateNoAmPmAsString(), RemindedTime: (currentReminder!["time"] as? String)!, ResponseTime: HelperMethods.currentTime24AsString(), TimeGroup: (currentReminder!["TimeGroup"] as? Int)!, AskedForDetails: currentAskedDetails, AskedToRepeat: currentAskedtoRepeat, ReminderIndex: ReminderIndex, ResponseResult: ResponseResult, PatientId: PatientId, Interaction: Interaction, BatteryLevel: currentBatteryLevel)
         print(response)
         guard let uploadData = try? JSONEncoder().encode(response) as NSData else {return}
         HelperMethods.sendToServer(uploadData: uploadData)
@@ -621,8 +607,8 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
     private var testServer: String = "http://ptsv2.com/t/1te8r-1532622698/post"
     
     func startDemo() {
-        let r1 = Response(ReminderId: 1, DateasString: HelperMethods.currentDateNoAmPmAsString(), RemindedTime: (currentReminder!["time"] as? String)!, ResponseTime: HelperMethods.currentTime24AsString(), TimeGroup: (currentReminder!["TimeGroup"] as? Int)!, AskedForDetails: currentAskedDetails, AskedToRepeat: currentAskedtoRepeat, ReminderIndex: 1, ResponseResult: 3, PatientId: PatientId, Interaction: "4:47:35 PM, S: It\'s the time to check your heart-rate. Do you want to check it now? \n4:47:43 PM, U: Don\'t remind \n", BatteryLevel: watchBatteryPercentage)
-        let r2 = Response(ReminderId: 2, DateasString: HelperMethods.currentDateNoAmPmAsString(), RemindedTime: (currentReminder!["time"] as? String)!, ResponseTime: HelperMethods.currentTime24AsString(), TimeGroup: (currentReminder!["TimeGroup"] as? Int)!, AskedForDetails: currentAskedDetails, AskedToRepeat: currentAskedtoRepeat, ReminderIndex: 2, ResponseResult: 4, PatientId: PatientId, Interaction: "8:47:35 PM, S: It\'s the time to check your heart-rate. Do you want to check it now? \n8:47:43 PM, U: Don\'t remind \n",BatteryLevel: watchBatteryPercentage)
+        let r1 = Response(ReminderId: 1, DateasString: HelperMethods.currentDateNoAmPmAsString(), RemindedTime: (currentReminder!["time"] as? String)!, ResponseTime: HelperMethods.currentTime24AsString(), TimeGroup: (currentReminder!["TimeGroup"] as? Int)!, AskedForDetails: currentAskedDetails, AskedToRepeat: currentAskedtoRepeat, ReminderIndex: 1, ResponseResult: 3, PatientId: PatientId, Interaction: "4:47:35 PM, S: It\'s the time to check your heart-rate. Do you want to check it now? \n4:47:43 PM, U: Don\'t remind \n", BatteryLevel: currentBatteryLevel)
+        let r2 = Response(ReminderId: 2, DateasString: HelperMethods.currentDateNoAmPmAsString(), RemindedTime: (currentReminder!["time"] as? String)!, ResponseTime: HelperMethods.currentTime24AsString(), TimeGroup: (currentReminder!["TimeGroup"] as? Int)!, AskedForDetails: currentAskedDetails, AskedToRepeat: currentAskedtoRepeat, ReminderIndex: 2, ResponseResult: 4, PatientId: PatientId, Interaction: "8:47:35 PM, S: It\'s the time to check your heart-rate. Do you want to check it now? \n8:47:43 PM, U: Don\'t remind \n",BatteryLevel: currentBatteryLevel)
         responseDictionary.removeAll()
         responseDictionary[String(r1.ReminderId) + "_" + r1.DateasString] = convertStructToString(response: r1)
         ConvDicToDataThenWriteToFile()

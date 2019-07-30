@@ -80,7 +80,7 @@ class HeartRateController: WKInterfaceController, HKWorkoutSessionDelegate {
         }
     }
     
-    func endof30Sec()
+    @objc func endof30Sec()
     {
         self.hkTimer?.invalidate()
         self.sendHeartRatesToServer()
@@ -95,7 +95,7 @@ class HeartRateController: WKInterfaceController, HKWorkoutSessionDelegate {
         })
     }
     
-    func endof60Sec()
+    @objc func endof60Sec()
     {
         self.screenOffTimer?.invalidate()
         self.dismiss()
