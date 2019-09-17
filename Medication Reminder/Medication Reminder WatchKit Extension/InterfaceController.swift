@@ -17,9 +17,9 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
     
     @IBOutlet var startBtn: WKInterfaceButton!
     @IBAction func startBtnAction() {
-        currentReminder = remindersDictionary.values.randomElement()
+        //currentReminder = remindersDictionary.values.randomElement()
         //  setcurrentRemindertoType(type: 3)
-        setNotifAfterSeconds(sec: 3)
+        //setTestNotificationAfterSeconds()
         //loadAlarm()
         //startDemo()
         super.willActivate()
@@ -27,6 +27,11 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
     @IBOutlet var prescriptionTable: WKInterfaceTable!    
     @IBOutlet var activityTitle: WKInterfaceLabel!
     @IBOutlet var activityImage: WKInterfaceImage!
+    
+    public var remindlaterMins: Int = 3
+    public var noResponseRepeatMins: Int = 3
+    public var testNotifyAfterSec: Int = 5
+    public var PatientId: Int = 2000
     
     override func awake(withContext context: Any?) {//first time open app
         startBtn.setHidden(true) //after testing, demo button not needed anymore
@@ -36,12 +41,21 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
         readPrescription()
         activateNotificationsOnWatch()
         WKInterfaceDevice.current().isBatteryMonitoringEnabled = true
-        if(!UserDefaults.standard.bool(forKey: "firstlaunch1.0")){
-            print("NOTIFICATIONS LOADED")
+        let loaded:String = ReadStrfromFile()
+        if(loaded == "LOADED"){
+            print("PREV LOADED")
+            
+        }else if (loaded == ""){
             loadAllRegularNotifications()
-            UserDefaults.standard.set(true, forKey: "firstlaunch1.0")
-            UserDefaults.standard.synchronize();
+            WriteStrtoFile(str: "LOADED")
+            print("NOW LOADED")
         }
+//        if(!UserDefaults.standard.bool(forKey: "launched2Sept2019.1")){
+//            print("NOTIFICATIONS LOADED")
+//            loadAllRegularNotifications()
+//            UserDefaults.standard.set(true, forKey: "launched2Sept2019.1")
+//            UserDefaults.standard.synchronize();
+//        }
         switchToPrescriptionsListView()
         loadPrescriptionListView()
     }
@@ -178,7 +192,13 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
                 let details:String = (currentReminder!["details"] as? String)!
                 utterSentence(line: details)
             }
-            else if (responseStr.contains("repeat") || responseStr.contains("what") || responseStr.contains("again")) {
+            else if (responseStr.contains("repeat") || responseStr.contains("what") || responseStr.contains("again") ) {
+                //currentResponseResult = ResponseType.respondedWithRepeat.rawValue
+                currentAskedtoRepeat = 1
+                let query:String = (currentReminder!["query"] as? String)!
+                utterSentence(line: query)
+            }
+            else if (responseStr.contains("which")) {
                 //currentResponseResult = ResponseType.respondedWithRepeat.rawValue
                 currentAskedtoRepeat = 1
                 let query:String = (currentReminder!["query"] as? String)!
@@ -191,9 +211,9 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
                 }
                 else if (responseStr.contains("later")){
                     currentResponseResult = ResponseType.respondedWithPostpone.rawValue
-                    let requeryTime: String = (currentReminder!["requery_interval"] as? String)!
-                    let reqStrArr = requeryTime.components(separatedBy: ":")
-                    let mn: Int = Int(reqStrArr[1])!
+                    //let //requeryTime: String = (currentReminder!["requery_interval"] as? String)!
+                    //let reqStrArr = requeryTime.components(separatedBy: ":")
+                    let mn: Int = remindlaterMins//Int(reqStrArr[1])!
                     utterSentence(line: "Ok. Remind you after \(mn) minutes");
                     onUserReschuledReminder(mn: mn)//setCurrentReminderAfterNminutes(mn: mn)
                 }
@@ -247,7 +267,7 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
         if(conversationFinished == true){
             //this 5sec is not important,conversationFinished does everything, but overall click/start talking has to be started within 40 secs mentioned in notifcontroller
             DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5), execute: {
-                self.sendSubjectResponseToServer(ReminderId: (self.currentReminder?["ReminderId"] as! Int), ReminderIndex: (self.currentReminder!["reminded"] as! Int), ResponseResult: self.currentResponseResult, Interaction: self.currentConversation)  //Interaction: HelperMethods.convertDictionaryToString(dic: self.currentInteractions)
+                self.sendSubjectResponseToServer(ReminderId: (self.currentReminder?["ReminderId"] as! Int), ReminderIndex: HelperMethods.getReminderIndex(serialIdentifier: self.currentReminder?["serialIdentifier"] as! String), ResponseResult: self.currentResponseResult, Interaction: self.currentConversation, RemindedTime: (self.currentReminder!["time"] as? String)!, TimeGroup: (self.currentReminder!["TimeGroup"] as? Int)!)  //Interaction: HelperMethods.convertDictionaryToString(dic: self.currentInteractions)
                 if(self.dontExit == false){
                     //exit(0);//should related to server send
                 }
@@ -272,7 +292,8 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
         loadAlarm()
     }
     
-    func setMissedReminderAsPerSerialIdentifer(reminder: NSMutableDictionary, mn: Int){
+    func setMissedReminderAsPerSerialIdentifer(reminder: NSMutableDictionary){
+        let mn: Int = noResponseRepeatMins
         let serialIdentifier = reminder["serialIdentifier"] as! String
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(mn * 60), repeats: false)
         if(serialIdentifier == "org")
@@ -350,9 +371,12 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
         UNUserNotificationCenter.current().setNotificationCategories([notificationCategory])
     }
     
-    func setNotifAfterSeconds(sec: Int){
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(sec), repeats: false)
-        addaReminderNotification(trigger: trigger, reminder: currentReminder!, serialIdentifier: "test")
+    func setTestNotificationAfterSeconds(){
+        //setcurrentremindertotype
+        currentReminder = remindersDictionary.values.randomElement()
+        let reminder: NSMutableDictionary = currentReminder!.mutableCopy() as! NSMutableDictionary
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(testNotifyAfterSec), repeats: false)
+        addaReminderNotification(trigger: trigger, reminder: reminder, serialIdentifier: "org") //test?
     }
     
     public func loadAlarm() {
@@ -362,6 +386,7 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
         currentConversation = ""
         currentAskedtoRepeat = 0
         currentAskedDetails = 0
+        connectedToInternet = true
         dontExit = false
         WKInterfaceDevice.current().play(.success)
         WKInterfaceDevice.current().play(.click)
@@ -385,7 +410,7 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
         })
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(15), execute: {
             if(self.currentResponseResult == 2){ //ended at clicked
-                self.sendSubjectResponseToServer(ReminderId: (self.currentReminder?["ReminderId"] as! Int), ReminderIndex: (self.currentReminder!["reminded"] as! Int), ResponseResult: self.currentResponseResult, Interaction: "")
+                self.sendSubjectResponseToServer(ReminderId: (self.currentReminder?["ReminderId"] as! Int), ReminderIndex: HelperMethods.getReminderIndex(serialIdentifier: self.currentReminder?["serialIdentifier"] as! String), ResponseResult: self.currentResponseResult, Interaction: "", RemindedTime: (self.currentReminder!["time"] as? String)!, TimeGroup: (self.currentReminder!["TimeGroup"] as? Int)!)
                 self.switchToPrescriptionsListView()
                 //exit(0)
                 //right now exits are for interactinos finished scene only, except if its not heartrate check beginning interaction
@@ -424,7 +449,10 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         if(conversationFinished == false){
             self.currentResponseText = ""
-            let textChoices = ["Yes/Taking now","Don't remind","Remind me later","Tell me details"]
+            var textChoices = ["Ok/Doing now","Don't remind","Remind me later","Tell me details"]
+            if(currentResponseResult > 2){
+                textChoices = ["Thanks!", "Okay"]
+            }
             if(connectedToInternet){
                 InitiateDictation(textChoices: []) //[]
             }else{
@@ -479,15 +507,15 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
     //---------other functions------------
     var connectedToInternet : Bool = true
     func checkConnectivityStatus(){
-        let config = URLSessionConfiguration.ephemeral
-        config.waitsForConnectivity = true
-        let sesh = URLSession(configuration: config)
-        let url = URL(string: "https://apple.com")! //
-        var request = URLRequest(url: url)
-        request.cachePolicy = URLRequest.CachePolicy.reloadIgnoringLocalCacheData //removes error
-        sesh.dataTask(with: request) { (_, _, error) in
-            self.connectedToInternet = (error == nil)
-            }.resume()
+//        let config = URLSessionConfiguration.ephemeral
+//        config.waitsForConnectivity = true
+//        let sesh = URLSession(configuration: config)
+//        let url = URL(string: "https://apple.com")! //
+//        var request = URLRequest(url: url)
+//        request.cachePolicy = URLRequest.CachePolicy.reloadIgnoringLocalCacheData //removes error
+//        sesh.dataTask(with: request) { (_, _, error) in
+//            self.connectedToInternet = (error == nil)
+//            }.resume()
         /*if let url = URL(string: "https://apple.com") {
             var request = URLRequest(url: url)
             request.httpMethod = "HEAD"
@@ -497,6 +525,11 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
                 }.resume()
         }*///https://stackoverflow.com/questions/48982014/network-reachability-check-in-watchkit
     }
+    
+    @IBAction func senddummyNotification() {
+        setTestNotificationAfterSeconds()
+    }
+    
     
     public struct Response: Codable {
         let ReminderId: Int
@@ -513,13 +546,13 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
         let BatteryLevel: Int
     }
     
-    public func sendSubjectResponseToServer(ReminderId: Int, ReminderIndex: Int, ResponseResult: Int, Interaction: String){
-        let response = Response(ReminderId: ReminderId, DateasString: HelperMethods.currentDateNoAmPmAsString(), RemindedTime: (currentReminder!["time"] as? String)!, ResponseTime: HelperMethods.currentTime24AsString(), TimeGroup: (currentReminder!["TimeGroup"] as? Int)!, AskedForDetails: currentAskedDetails, AskedToRepeat: currentAskedtoRepeat, ReminderIndex: ReminderIndex, ResponseResult: ResponseResult, PatientId: PatientId, Interaction: Interaction, BatteryLevel: currentBatteryLevel)
+    public func sendSubjectResponseToServer(ReminderId: Int, ReminderIndex: Int, ResponseResult: Int, Interaction: String, RemindedTime: String, TimeGroup: Int){
+        let response = Response(ReminderId: ReminderId, DateasString: HelperMethods.currentDateNoAmPmAsString(), RemindedTime: RemindedTime, ResponseTime: HelperMethods.currentTime24AsString(), TimeGroup: TimeGroup, AskedForDetails: currentAskedDetails, AskedToRepeat: currentAskedtoRepeat, ReminderIndex: ReminderIndex, ResponseResult: ResponseResult, PatientId: PatientId, Interaction: Interaction, BatteryLevel: currentBatteryLevel)
         print(response)
         guard let uploadData = try? JSONEncoder().encode(response) as NSData else {return}
         HelperMethods.sendToServer(uploadData: uploadData)
         //ClearFileContents()
-        //file_approach(r: response)
+        //file_approach(r: response)(currentReminder!["time"] as? String)! (currentReminder!["TimeGroup"] as? Int)!
     }
     
     //---------to be thrown away layer-----------
@@ -600,8 +633,6 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
     }
     
 
-    
-    public var PatientId: Int = 2002
     private var localServer: String = "http://172.26.134.73:3000"
     private var remoteServer: String = "http://ec2-18-188-221-234.us-east-2.compute.amazonaws.com:3000/"
     private var testServer: String = "http://ptsv2.com/t/1te8r-1532622698/post"
@@ -713,6 +744,30 @@ class InterfaceController: WKInterfaceController, UNUserNotificationCenterDelega
             let fileURL = dir.appendingPathComponent("toWrite.json")
             do {
                 try data.write(to: fileURL, options: .atomic)
+            }
+            catch {}
+        }
+    }
+    
+    func ReadStrfromFile()-> String
+    {
+        var str = ""
+        if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+            let fileURL = dir.appendingPathComponent("toWrite.json")
+            do {
+                str = try String(contentsOf: fileURL, encoding: .utf8)
+            }
+            catch {}
+        }
+        return str
+    }
+    
+    func WriteStrtoFile(str: String)
+    {
+        if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+            let fileURL = dir.appendingPathComponent("toWrite.json")
+            do {
+                try str.write(to: fileURL, atomically: false, encoding: .utf8)
             }
             catch {}
         }

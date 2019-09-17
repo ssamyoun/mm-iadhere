@@ -250,7 +250,8 @@ class HeartRateController: WKInterfaceController, HKWorkoutSessionDelegate {
             let currentReminder: NSMutableDictionary? = iDelegate?.currentReminder
             let patientId: Int = (iDelegate?.PatientId)!
             heartRatesAsStr = String(heartRatesAsStr.dropLast()) //remove , from last
-            iDelegate?.sendSubjectResponseToServer(ReminderId: (currentReminder?["ReminderId"] as! Int), ReminderIndex: 0, ResponseResult: 6, Interaction: heartRatesAsStr)
+            iDelegate?.sendSubjectResponseToServer(ReminderId: (currentReminder?["ReminderId"] as! Int), ReminderIndex: 0, ResponseResult: 6, Interaction: heartRatesAsStr, RemindedTime: currentReminder?["time"] as! String, TimeGroup: currentReminder?["TimeGroup"] as! Int)
+            //
             //let response = iDelegate?.Response(ReminderId: (currentReminder?["ReminderId"] as! Int), DateasString: HelperMethods.currentDateNoAmPmAsString(), RemindedTime: (currentReminder!["time"] as? String)!, ResponseTime: HelperMethods.currentTime24AsString(), TimeGroup: (currentReminder!["TimeGroup"] as? Int)!, AskedForDetails: 0, AskedToRepeat: 0, ReminderIndex: 0, PatientId: patientId, ResponseResult: 6, Interaction: heartRatesAsStr)
             //guard let uploadData = try? JSONEncoder().encode(response) as NSData else {
                 //return

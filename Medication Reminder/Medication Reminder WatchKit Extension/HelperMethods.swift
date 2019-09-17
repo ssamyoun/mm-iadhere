@@ -19,10 +19,10 @@ class HelperMethods {
     static func getReminderIndex(serialIdentifier:String) -> Int{
         switch serialIdentifier
         {
-        case "org": return 0
-        case "uno": return 1
-        case "duo": return 2
-        default: return -1 //test
+        case "org": return 1
+        case "uno": return 2
+        case "duo": return 3
+        default: return 0 //test
         }
     }
     
@@ -129,7 +129,7 @@ class HelperMethods {
     static func currentTime24AsString() -> String{
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = ""
+        dateFormatter.dateFormat = "HH:mm:ss"
         let outputString = dateFormatter.string(from: Date())
         return outputString
     }

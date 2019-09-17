@@ -38,21 +38,42 @@ class NotificationController: WKUserNotificationInterfaceController {
     override func didReceive(_ notification: UNNotification, withCompletion completionHandler: @escaping (WKUserNotificationInterfaceType) -> Swift.Void) {
         let content = notification.request.content
         let dc = content.userInfo as NSDictionary
-        let receivedReminderCopy: NSMutableDictionary = dc.mutableCopy() as! NSMutableDictionary
-        let iDelegate = WKExtension.shared().rootInterfaceController as? InterfaceController //.visibleInterfaceController also works
-        iDelegate?.currentResponseResult = 1
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(40), execute: {
-            if((iDelegate?.currentResponseResult)! < 2){ //ended at notified
-                iDelegate?.setMissedReminderAsPerSerialIdentifer(reminder: receivedReminderCopy, mn: 10)
-                iDelegate?.sendSubjectResponseToServer(ReminderId: (receivedReminderCopy["ReminderId"] as! Int), ReminderIndex: HelperMethods.getReminderIndex(serialIdentifier: receivedReminderCopy["serialIdentifier"] as! String), ResponseResult: (iDelegate?.currentResponseResult)!, Interaction: "")
-                //exit(0)
-                //but i blv renotifs in simulators happen bcz we dont uninstall everytime before build so calendar notifs are set multiple times
-            }
-        })
+        let receivedReminderCopy = dc.mutableCopy() as! NSMutableDictionary
+        //perform(#selector(afterSeconds), with: nil, afterDelay: 40)
+        let iDelegate = WKExtension.shared().rootInterfaceController as! InterfaceController
+        iDelegate.currentResponseResult = 1
         titleLabel.setText(content.title)
         subtitleLabel.setText(content.subtitle)
         bodyLabel.setText(content.body)
         completionHandler(.custom)
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(40), execute: {
+            var currentReminderId = 0
+            if(iDelegate.currentReminder != nil){
+                currentReminderId = (iDelegate.currentReminder?["ReminderId"] as? Int)! // click korle currentReminderId set hoye jeto
+            }
+            let receivedReminderId = (receivedReminderCopy["ReminderId"] as? Int)!
+            print((receivedReminderCopy["ReminderId"] as? Int)!)
+            print((receivedReminderCopy["med_name"] as? String)!)
+            if((receivedReminderId != currentReminderId) || (iDelegate.currentResponseResult) < 2){ //ended at notified
+                UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+                iDelegate.sendSubjectResponseToServer(ReminderId: (receivedReminderCopy["ReminderId"] as! Int), ReminderIndex: HelperMethods.getReminderIndex(serialIdentifier: receivedReminderCopy["serialIdentifier"] as! String), ResponseResult: (iDelegate.currentResponseResult), Interaction: "", RemindedTime: receivedReminderCopy["time"] as! String, TimeGroup: receivedReminderCopy["TimeGroup"] as! Int)
+                iDelegate.setMissedReminderAsPerSerialIdentifer(reminder: receivedReminderCopy) //this must be after prev line, otherwise serialid changes before going to server
+            }
+        })
     }
+    //works for wake up screen in session
+    //public var receivedReminderCopy: NSMutableDictionary = NSMutableDictionary()
     
+//    @objc public func afterSeconds(){
+//        let iDelegate = WKExtension.shared().rootInterfaceController as! InterfaceController
+//        iDelegate.currentResponseResult = 1
+//        let currentReminderId = (iDelegate.currentReminder!["ReminderId"] as? Int)!
+//        let receivedReminderId = (receivedReminderCopy["ReminderId"] as? Int)!
+//        if((receivedReminderId != currentReminderId) || (iDelegate.currentResponseResult) < 2){ //ended at notified
+//            iDelegate.setMissedReminderAsPerSerialIdentifer(reminder: receivedReminderCopy)
+//            iDelegate.sendSubjectResponseToServer(ReminderId: (receivedReminderCopy["ReminderId"] as! Int), ReminderIndex: HelperMethods.getReminderIndex(serialIdentifier: receivedReminderCopy["serialIdentifier"] as! String), ResponseResult: (iDelegate.currentResponseResult), Interaction: "")
+//    }
+    
+//}
+
 }
